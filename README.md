@@ -58,7 +58,7 @@ The `CUSTOMER_LOAN` table holds zero to many loans taken by a customer.
 |               20 |        20100 |
 
 Having done the domain modeling you can start messing up with JavaScript and end up with the following AngularJS
-[service](https://docs.angularjs.org/guide/services):
+[service](https://docs.angularjs.org/guide/services)s:
 
 ```js
 angular.module('scJohnBorrower.loan')
@@ -69,13 +69,13 @@ loanRepositoryFactory.$inject = ['$q'];
 function loanRepositoryFactory($q) {
    function findAll() {
       return $q.when([
-         {id: 10250, borrower: {id: 1, firstName: 'Albert', lastName: 'Einstein'}, amount: 1600},
-         {id: 10240, borrower: {id: 2, firstName: 'Eliza', lastName: 'Orzeszkowa'}, amount: 1400}
+         {id: 10250, amount: 1600, borrower: {id: 1, firstName: 'Albert', lastName: 'Einstein'}},
+         {id: 10240, amount: 1400, borrower: {id: 2, firstName: 'Eliza', lastName: 'Orzeszkowa'}}
       ]);
    }
 
    function findOne(id) {
-      return $q.when({id: id, borrower: {id: 1, firstName: 'Albert', lastName: 'Einstein'}, amount: 1600});
+      return new Error('Not implemented yet!');
    }
 
    function findByBorrowerId(borrowerId) {
@@ -88,4 +88,95 @@ function loanRepositoryFactory($q) {
       findByBorrowerId: findByBorrowerId
    };
 }
+```
+
+```js
+angular.module('scJohnBorrower.customer')
+   .factory('customerRepository', customerRepositoryFactory);
+
+customerRepositoryFactory.$inject = ['$q'];
+
+function customerRepositoryFactory($q) {
+   function findAll() {
+      return $q.when([
+         {id: 1, firstName: 'Albert', lastName: 'Einstein'},
+         {id: 2, firstName: 'Eliza', lastName: 'Orzeszkowa'}
+      ]);
+   }
+
+   function findOne(id) {
+      throw new Error('Not implemented yet');
+   }
+
+   return {
+      findAll: findAll,
+      findOne: findOne
+   };
+}
+```
+
+#### DRY
+
+```js
+angular.module('scJohnBorrower.loan')
+   .factory('loanRepository', loanRepositoryFactory);
+
+loanRepositoryFactory.$inject = ['embeddedDatabase'];
+
+function loanRepositoryFactory(embeddedDatabase) {
+   function findAll() {
+      return embeddedDatabase.executeSql(
+         'SELECT L.ID AS ID, L.AMOUNT AS AMOUNT, ' +
+         'C.ID AS BORROWER_ID, C.FIRST_NAME AS BORROWER_FIRSTNAME, C.LAST_NAME AS BORROWER_LASTNAME ' +
+         'FROM LOAN AS L' +
+         'INNER JOIN CUSTOMER_LOAN CL ON L.ID = CL.LOAN_ID ' +
+         'INNER JOIN CUSTOMER C ON CL.CUSTOMER_ID = C.ID');
+   }
+
+   function findOne(id) {
+      return embeddedDatabase.executeSql(
+         'SELECT L.ID AS ID, L.AMOUNT AS AMOUNT, ' +
+         'C.ID AS BORROWER_ID, C.FIRST_NAME AS BORROWER_FIRSTNAME, C.LAST_NAME AS BORROWER_LASTNAME ' +
+         'FROM LOAN AS L' +
+         'INNER JOIN CUSTOMER_LOAN CL ON L.ID = CL.LOAN_ID ' +
+         'INNER JOIN CUSTOMER C ON CL.CUSTOMER_ID = C.ID' +
+         'WHERE L.ID = ?', [id]);
+   }
+
+   function findByBorrowerId(borrowerId) {
+      return embeddedDatabase.executeSql(
+         'SELECT L.ID AS ID, L.AMOUNT AS AMOUNT, ' +
+         'C.ID AS BORROWER_ID, C.FIRST_NAME AS BORROWER_FIRSTNAME, C.LAST_NAME AS BORROWER_LASTNAME ' +
+         'FROM LOAN AS L' +
+         'INNER JOIN CUSTOMER_LOAN CL ON L.ID = CL.LOAN_ID ' +
+         'INNER JOIN CUSTOMER C ON CL.CUSTOMER_ID = C.ID' +
+         'WHERE C.ID = ?', [borrowerId]);
+   }
+
+   return {
+      findAll: findAll,
+      findOne: findOne,
+      findByBorrowerId: findByBorrowerId
+   };
+}
+```
+
+It's important to realize how the aliases in the SELECT clause determine the returned data format.
+A proper use of the `_` underscore character allows you to return some columns as the properties of
+an embedded object.
+
+For example, the following SELECT clause:
+
+```sql
+SELECT L.ID AS ID, L.AMOUNT AS AMOUNT,
+       C.ID AS BORROWER_ID, C.FIRST_NAME AS BORROWER_FIRSTNAME, C.LAST_NAME AS BORROWER_LASTNAME
+```
+
+when passed to the `executeSql` function will return the following JSON:
+
+```js
+[
+   {id: 10250, amount: 1600, borrower: {id: 1, firstName: 'Albert', lastName: 'Einstein'}},
+   {id: 10240, amount: 1400, borrower: {id: 2, firstName: 'Eliza', lastName: 'Orzeszkowa'}}
+]
 ```
