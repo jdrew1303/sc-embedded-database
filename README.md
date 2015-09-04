@@ -58,10 +58,10 @@ The `CUSTOMER_LOAN` table holds zero to many loans taken by a customer.
 |               20 |        20100 |
 
 Having done the domain modeling you can start messing up with JavaScript and end up with the following AngularJS
-[service](https://docs.angularjs.org/guide/services)s:
+[service](https://docs.angularjs.org/guide/services) for fetching loans:
 
 ```js
-angular.module('scJohnBorrower.loan')
+angular.module('scJohnBorrower.loan', ['scEmbeddedDatabase'])
    .factory('loanRepository', loanRepositoryFactory);
 
 loanRepositoryFactory.$inject = ['$q'];
@@ -90,42 +90,17 @@ function loanRepositoryFactory($q) {
 }
 ```
 
-```js
-angular.module('scJohnBorrower.customer')
-   .factory('customerRepository', customerRepositoryFactory);
-
-customerRepositoryFactory.$inject = ['$q'];
-
-function customerRepositoryFactory($q) {
-   function findAll() {
-      return $q.when([
-         {id: 1, firstName: 'Albert', lastName: 'Einstein'},
-         {id: 2, firstName: 'Eliza', lastName: 'Orzeszkowa'}
-      ]);
-   }
-
-   function findOne(id) {
-      throw new Error('Not implemented yet');
-   }
-
-   return {
-      findAll: findAll,
-      findOne: findOne
-   };
-}
-```
-
 #### DRY
 
 ```js
 angular.module('scJohnBorrower.loan')
    .factory('loanRepository', loanRepositoryFactory);
 
-loanRepositoryFactory.$inject = ['embeddedDatabase'];
+loanRepositoryFactory.$inject = ['scEmbeddedDatabase'];
 
-function loanRepositoryFactory(embeddedDatabase) {
+function loanRepositoryFactory(scEmbeddedDatabase) {
    function findAll() {
-      return embeddedDatabase.executeSql(
+      return scEmbeddedDatabase.executeSql(
          'SELECT L.ID AS ID, L.AMOUNT AS AMOUNT, ' +
          'C.ID AS BORROWER_ID, C.FIRST_NAME AS BORROWER_FIRSTNAME, C.LAST_NAME AS BORROWER_LASTNAME ' +
          'FROM LOAN AS L' +
@@ -134,7 +109,7 @@ function loanRepositoryFactory(embeddedDatabase) {
    }
 
    function findOne(id) {
-      return embeddedDatabase.executeSql(
+      return scEmbeddedDatabase.executeSql(
          'SELECT L.ID AS ID, L.AMOUNT AS AMOUNT, ' +
          'C.ID AS BORROWER_ID, C.FIRST_NAME AS BORROWER_FIRSTNAME, C.LAST_NAME AS BORROWER_LASTNAME ' +
          'FROM LOAN AS L' +
@@ -144,7 +119,7 @@ function loanRepositoryFactory(embeddedDatabase) {
    }
 
    function findByBorrowerId(borrowerId) {
-      return embeddedDatabase.executeSql(
+      return scEmbeddedDatabase.executeSql(
          'SELECT L.ID AS ID, L.AMOUNT AS AMOUNT, ' +
          'C.ID AS BORROWER_ID, C.FIRST_NAME AS BORROWER_FIRSTNAME, C.LAST_NAME AS BORROWER_LASTNAME ' +
          'FROM LOAN AS L' +
@@ -172,7 +147,7 @@ SELECT L.ID AS ID, L.AMOUNT AS AMOUNT,
        C.ID AS BORROWER_ID, C.FIRST_NAME AS BORROWER_FIRSTNAME, C.LAST_NAME AS BORROWER_LASTNAME
 ```
 
-when passed to the `executeSql` function will return the following JSON:
+when passed to the `scEmbeddedDatabase#executeSql` function will return the following JSON:
 
 ```js
 [
