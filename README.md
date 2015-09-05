@@ -21,8 +21,8 @@ to support your project. A customer is in a need to borrow some money fast. Ther
 to track all borrowers, their personal and contact data as well as loan requests. Tracking overdue
 loans and calculating penalty rates is a part of the business too.
 
-So they teach in kindergarten that you may go with the following [relational model](https://en.wikipedia.org/wiki/Relational_model)
-to store the data.
+So they teach in kindergarten that you may go with the following
+[relational model](https://en.wikipedia.org/wiki/Relational_model) to store the data.
 
 #### CUSTOMER
 
