@@ -1,5 +1,5 @@
-sc-embedded-sql-database
-========================
+sc-embedded-database
+====================
 
 ## WTF?
 
