@@ -1,6 +1,9 @@
 sc-embedded-database
 ====================
 
+[![npm version](https://badge.fury.io/js/sc-embedded-database.svg)](http://badge.fury.io/js/sc-embedded-database)
+[![Bower version](https://badge.fury.io/bo/sc-embedded-database.svg)](http://badge.fury.io/bo/sc-embedded-database)
+
 ## WTF?
 
 ### Assumptions
