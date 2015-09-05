@@ -1,0 +1,10 @@
+/**
+ * @license sc-embedded-database v<%= version %>
+ * (c) 2014-2015 SOFTWARE CLINIC Pacak Daniel
+ * License: MIT
+ */
+(function(window, angular, undefined) {'use strict';
+
+<%= contents %>
+
+})(window, window.angular);

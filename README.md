@@ -64,7 +64,7 @@ Having done the domain modeling you can start messing up with JavaScript and end
 [service](https://docs.angularjs.org/guide/services) for fetching loans:
 
 ```js
-angular.module('scJohnBorrower.loan', ['scEmbeddedDatabase'])
+angular.module('scJohnBorrower.loan', ['ng'])
    .factory('loanRepository', loanRepositoryFactory);
 
 loanRepositoryFactory.$inject = ['$q'];
@@ -96,7 +96,7 @@ function loanRepositoryFactory($q) {
 #### DRY
 
 ```js
-angular.module('scJohnBorrower.loan')
+angular.module('scJohnBorrower.loan', ['scEmbeddedDatabase'])
    .factory('loanRepository', loanRepositoryFactory);
 
 loanRepositoryFactory.$inject = ['scEmbeddedDatabase'];
