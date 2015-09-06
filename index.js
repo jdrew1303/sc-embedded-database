@@ -1,2 +1,2 @@
-require('.sc-embedded-database');
+require('./sc-embedded-database');
 module.exports = 'scEmbeddedDatabase';

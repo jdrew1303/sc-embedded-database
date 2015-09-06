@@ -10,6 +10,7 @@
   "bugs": {
     "url": "https://github.com/SOFTWARE-CLINIC/sc-embedded--database/issues"
   },
+  "author": "Daniel Pacak <pacak.daniel@gmail.com>",
   "keywords": [
     "angular",
     "module",

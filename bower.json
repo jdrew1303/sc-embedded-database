@@ -3,6 +3,13 @@
   "description": "AngularJS module to rapidly feed your POC's frontend with data using SQL syntax.",
   "version": "0.0.4-build",
   "main": "./sc-embedded-database.js",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/SOFTWARE-CLINIC/sc-embedded-database.git"
+  },
+  "authors": [
+    "Daniel Pacak <pacak.daniel@gmail.com>"
+  ],
   "keywords": [
     "angular",
     "module",
@@ -13,6 +20,7 @@
     "test",
     "data"
   ],
+  "license": "MIT",
   "dependencies": {
     "angular": "1.4.5"
   },
