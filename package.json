@@ -1,13 +1,24 @@
 {
   "name": "sc-embedded-database",
-  "version": "1.0.0",
-  "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
-  },
+  "description": "AngularJS module to rapidly feed your POC's frontend with data using SQL syntax.",
+  "version": "0.0.4-build",
   "repository": {
     "type": "git",
     "url": "https://github.com/SOFTWARE-CLINIC/sc-embedded-database.git"
   },
+  "bugs": {
+    "url": "https://github.com/SOFTWARE-CLINIC/sc-embedded--database/issues"
+  },
+  "keywords": [
+    "angular",
+    "module",
+    "embedded",
+    "sql",
+    "database",
+    "stub",
+    "test",
+    "data"
+  ],
   "license": "MIT",
   "devDependencies": {
     "del": "^2.0.1",
@@ -16,6 +27,14 @@
     "gulp-jsbeautifier": "^1.0.1",
     "gulp-sourcemaps": "^1.5.2",
     "gulp-uglify": "^1.4.0",
-    "gulp-wrap": "^0.11.0"
+    "gulp-wrap": "^0.11.0",
+    "jasmine-core": "^2.3.4",
+    "karma": "^0.13.9",
+    "karma-jasmine": "^0.3.6",
+    "karma-phantomjs-launcher": "^0.2.1",
+    "phantomjs": "^1.9.18"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
   }
 }

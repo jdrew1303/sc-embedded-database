@@ -1,0 +1,12 @@
+{
+  "name": "sc-embedded-database",
+  "description": "AngularJS module to rapidly feed your POC's frontend with data using SQL syntax.",
+  "version": "0.0.4-build",
+  "main": "./sc-embedded-database.js",
+  "dependencies": {
+    "angular": "1.4.5"
+  },
+  "devDependencies": {
+    "angular-mocks": "1.4.5"
+  }
+}

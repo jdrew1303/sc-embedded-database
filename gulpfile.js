@@ -5,6 +5,7 @@ var prettify = require('gulp-jsbeautifier');
 var wrap = require('gulp-wrap');
 var sourcemaps = require('gulp-sourcemaps');
 var del = require('del');
+var Server = require('karma').Server;
 
 var paths = {
     scripts: [
@@ -41,6 +42,13 @@ gulp.task('scripts.min', function () {
         .pipe(gulp.dest(paths.dist))
 });
 
+gulp.task('tests', function (done) {
+    new Server({
+        configFile: __dirname + '/test/karma.conf.js',
+        singleRun: true
+    }, done).start();
+});
+
 gulp.task('dist', ['clean', 'scripts', 'scripts.min']);
 
-gulp.task('default', ['dist']);
+gulp.task('default', ['tests']);
