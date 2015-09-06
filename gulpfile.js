@@ -15,7 +15,7 @@ var paths = {
     dist: 'dist'
 };
 
-var version = '0.0.5-build';
+var version = '0.0.6-build';
 
 gulp.task('clean', function () {
     return del([paths.dist]);
