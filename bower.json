@@ -26,5 +26,6 @@
   },
   "devDependencies": {
     "angular-mocks": "1.4.5"
-  }
+  },
+  "ignore": []
 }

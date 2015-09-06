@@ -17,11 +17,13 @@ module.exports = function (config) {
         exclude: [],
 
         browsers: [
-            'PhantomJS'
+            'PhantomJS',
+            'Chrome'
         ],
 
         plugins: [
             'karma-phantomjs-launcher',
+            'karma-chrome-launcher',
             'karma-jasmine'
         ],
 

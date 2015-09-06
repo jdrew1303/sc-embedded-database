@@ -31,10 +31,11 @@ So they teach in kindergarten that you may go with the following
 
 The `CUSTOMER` table holds basic customer details.
 
-| ID (PK) | FIRST_NAME | LAST_NAME  |
-|--------:|------------|------------|
-|      10 | Albert     | Einstein   |
-|      20 | Eliza      | Orzeszkowa |
+| ID (PK) | FIRST_NAME | LAST_NAME   |
+|--------:|------------|-------------|
+|      10 | Albert     | Einstein    |
+|      20 | Eliza      | Orzeszkowa  |
+|      30 | Henryk     | Sienkiewicz |
 
 #### LOAN
 
@@ -64,7 +65,7 @@ Having done the domain modeling you can start messing up with JavaScript and end
 [service](https://docs.angularjs.org/guide/services) for fetching loans:
 
 ```js
-angular.module('scJohnBorrower.loan', ['ng'])
+angular.module('scJanPozycz.loan', ['ng'])
    .factory('loanRepository', loanRepositoryFactory);
 
 loanRepositoryFactory.$inject = ['$q'];
@@ -96,39 +97,59 @@ function loanRepositoryFactory($q) {
 #### DRY
 
 ```js
-angular.module('scJohnBorrower.loan', ['scEmbeddedDatabase'])
+angular.module('scJanPozycz.loan', ['scEmbeddedDatabase'])
    .factory('loanRepository', loanRepositoryFactory);
 
 loanRepositoryFactory.$inject = ['scEmbeddedDatabase'];
 
 function loanRepositoryFactory(scEmbeddedDatabase) {
+
+   var janpozyczdb = scEmbeddedDatabase.use('janpozyczdb');
+
    function findAll() {
-      return scEmbeddedDatabase.executeSql(
-         'SELECT L.ID AS ID, L.AMOUNT AS AMOUNT, ' +
-         'C.ID AS BORROWER_ID, C.FIRST_NAME AS BORROWER_FIRSTNAME, C.LAST_NAME AS BORROWER_LASTNAME ' +
-         'FROM LOAN AS L' +
-         'INNER JOIN CUSTOMER_LOAN CL ON L.ID = CL.LOAN_ID ' +
-         'INNER JOIN CUSTOMER C ON CL.CUSTOMER_ID = C.ID');
+      return janpozyczdb.executeSql(
+         'SELECT ' +
+         '  L.ID AS id, ' +
+         '  L.AMOUNT AS amount, ' +
+         '  L.PERIOD AS period, ' +
+         '  C.ID AS borrower_id, ' +
+         '  C.FIRST_NAME AS borrower_firstName, ' +
+         '  C.LAST_NAME AS borrower_lastName ' +
+         'FROM LOAN AS L ' +
+         '  INNER JOIN CUSTOMER_LOAN CL ON L.ID = CL.LOAN_ID ' +
+         '  INNER JOIN CUSTOMER C ON CL.CUSTOMER_ID = C.ID'
+      ).then(toArray);
    }
 
    function findOne(id) {
-      return scEmbeddedDatabase.executeSql(
-         'SELECT L.ID AS ID, L.AMOUNT AS AMOUNT, ' +
-         'C.ID AS BORROWER_ID, C.FIRST_NAME AS BORROWER_FIRSTNAME, C.LAST_NAME AS BORROWER_LASTNAME ' +
-         'FROM LOAN AS L' +
-         'INNER JOIN CUSTOMER_LOAN CL ON L.ID = CL.LOAN_ID ' +
-         'INNER JOIN CUSTOMER C ON CL.CUSTOMER_ID = C.ID' +
-         'WHERE L.ID = ?', [id]);
+      return janpozyczdb.executeSql(
+          'SELECT L.ID AS id, ' +
+          '  L.AMOUNT AS amount, ' +
+          '  L.PERIOD AS period, ' +
+          '  C.ID AS borrower_id, ' +
+          '  C.FIRST_NAME AS borrower_firstName, ' + '' +
+          '  C.LAST_NAME AS borrower_lastName ' +
+          'FROM LOAN AS L ' +
+          '  INNER JOIN CUSTOMER_LOAN CL ON L.ID = CL.LOAN_ID ' +
+          '  INNER JOIN CUSTOMER C ON CL.CUSTOMER_ID = C.ID ' +
+          'WHERE L.ID = ?', [id]
+      ).then(toArray).then(firstElement);
    }
 
    function findByBorrowerId(borrowerId) {
-      return scEmbeddedDatabase.executeSql(
-         'SELECT L.ID AS ID, L.AMOUNT AS AMOUNT, ' +
-         'C.ID AS BORROWER_ID, C.FIRST_NAME AS BORROWER_FIRSTNAME, C.LAST_NAME AS BORROWER_LASTNAME ' +
-         'FROM LOAN AS L' +
-         'INNER JOIN CUSTOMER_LOAN CL ON L.ID = CL.LOAN_ID ' +
-         'INNER JOIN CUSTOMER C ON CL.CUSTOMER_ID = C.ID' +
-         'WHERE C.ID = ?', [borrowerId]);
+      return janpozyczdb.executeSql(
+          'SELECT ' +
+          '  L.ID AS id, ' +
+          '  L.AMOUNT AS amount, ' +
+          '  L.PERIOD AS period, ' +
+          '  C.ID AS borrower_id, ' +
+          '  C.FIRST_NAME AS borrower_firstName, ' +
+          '  C.LAST_NAME AS borrower_lastName ' +
+          'FROM LOAN AS L' +
+          '  INNER JOIN CUSTOMER_LOAN CL ON L.ID = CL.LOAN_ID ' +
+          '  INNER JOIN CUSTOMER C ON CL.CUSTOMER_ID = C.ID ' +
+          'WHERE C.ID = ?', [borrowerId]
+      ).then(toArray);
    }
 
    return {
@@ -146,8 +167,8 @@ an embedded object.
 For example, the following SELECT clause:
 
 ```sql
-SELECT L.ID AS ID, L.AMOUNT AS AMOUNT,
-       C.ID AS BORROWER_ID, C.FIRST_NAME AS BORROWER_FIRSTNAME, C.LAST_NAME AS BORROWER_LASTNAME
+SELECT L.ID AS id, L.AMOUNT AS amount, L.PERIOD AS period,
+       C.ID AS borrower_id, C.FIRST_NAME AS borrower_firstName, C.LAST_NAME AS borrower_lastName
 ```
 
 when passed to the `scEmbeddedDatabase#executeSql` function will return the following JSON:
