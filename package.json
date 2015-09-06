@@ -2,6 +2,7 @@
   "name": "sc-embedded-database",
   "description": "AngularJS module to rapidly feed your POC's frontend with data using SQL syntax.",
   "version": "0.0.4-build",
+  "main": "index.js",
   "repository": {
     "type": "git",
     "url": "https://github.com/SOFTWARE-CLINIC/sc-embedded-database.git"

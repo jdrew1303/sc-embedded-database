@@ -3,6 +3,16 @@
   "description": "AngularJS module to rapidly feed your POC's frontend with data using SQL syntax.",
   "version": "0.0.4-build",
   "main": "./sc-embedded-database.js",
+  "keywords": [
+    "angular",
+    "module",
+    "embedded",
+    "sql",
+    "database",
+    "stub",
+    "test",
+    "data"
+  ],
   "dependencies": {
     "angular": "1.4.5"
   },

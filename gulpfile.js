@@ -42,6 +42,11 @@ gulp.task('scripts.min', function () {
         .pipe(gulp.dest(paths.dist))
 });
 
+gulp.task('copy.package.config', function () {
+    return gulp.src(['package.json', 'bower.json', 'index.js'])
+        .pipe(gulp.dest(paths.dist));
+});
+
 gulp.task('tests', function (done) {
     new Server({
         configFile: __dirname + '/test/karma.conf.js',
@@ -49,6 +54,6 @@ gulp.task('tests', function (done) {
     }, done).start();
 });
 
-gulp.task('dist', ['clean', 'scripts', 'scripts.min']);
+gulp.task('dist', ['clean', 'copy.package.config', 'scripts', 'scripts.min']);
 
 gulp.task('default', ['tests']);
