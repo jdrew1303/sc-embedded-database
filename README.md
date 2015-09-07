@@ -275,21 +275,28 @@ function createDatabase(scEmbeddedDatabase) {
 
   janpozyczdb.executeSql('DROP TABLE CUSTOMER');
   janpozyczdb.executeSql('CREATE TABLE CUSTOMER(ID UNIQUE, FIRST_NAME, LAST_NAME)');
-  janpozyczdb.executeSql('INSERT INTO CUSTOMER(ID, FIRST_NAME, LAST_NAME) VALUES (10, "Albert", "Einstein")');
-  janpozyczdb.executeSql('INSERT INTO CUSTOMER(ID, FIRST_NAME, LAST_NAME) VALUES (20, "Eliza", "Orzeszkowa")');
-  janpozyczdb.executeSql('INSERT INTO CUSTOMER(ID, FIRST_NAME, LAST_NAME) VALUES (30, "Henryk", "Sienkiewicz")');
+  janpozyczdb.batchUpdate('INSERT INTO CUSTOMER(ID, FIRST_NAME, LAST_NAME) VALUES (?, ?, ?)', [
+    [10, 'Albert', 'Einstein'],
+    [20, 'Eliza', 'Orzeszkowa'],
+    [30, 'Henryk', 'Sienkiewicz']
+  ]);
 
   janpozyczdb.executeSql('DROP TABLE LOAN');
   janpozyczdb.executeSql('CREATE TABLE LOAN(ID UNIQUE, AMOUNT, PERIOD, STATUS)');
-  janpozyczdb.executeSql('INSERT INTO LOAN(ID, AMOUNT, PERIOD, STATUS) VALUES (10050, "1500 EUR", "30 DAYS", "REQUESTED")');
-  janpozyczdb.executeSql('INSERT INTO LOAN(ID, AMOUNT, PERIOD, STATUS) VALUES (10060, "1000 EUR", "15 DAYS", "OVERDUE")');
-  janpozyczdb.executeSql('INSERT INTO LOAN(ID, AMOUNT, PERIOD, STATUS) VALUES (20100, "500 EUR", "7 DAYS", "ACTIVE")');
+  janpozyczdb.batchUpdate('INSERT INTO LOAN(ID, AMOUNT, PERIOD, STATUS) VALUES (?, ?, ?, ?)', [
+    [10050, '1500 EUR', '30 DAYS', 'REQUESTED'],
+    [10060, '1000 EUR', '15 DAYS', 'OVERDUE'],
+    [20100, '500 EUR', '7 DAYS', 'ACTIVE']
+  ]);
 
   janpozyczdb.executeSql('DROP TABLE CUSTOMER_LOAN');
   janpozyczdb.executeSql('CREATE TABLE CUSTOMER_LOAN(CUSTOMER_ID, LOAN_ID)');
-  janpozyczdb.executeSql('INSERT INTO CUSTOMER_LOAN(CUSTOMER_ID, LOAN_ID) VALUES(10, 10050)');
-  janpozyczdb.executeSql('INSERT INTO CUSTOMER_LOAN(CUSTOMER_ID, LOAN_ID) VALUES(10, 10060)');
-  janpozyczdb.executeSql('INSERT INTO CUSTOMER_LOAN(CUSTOMER_ID, LOAN_ID) VALUES(20, 20100)');
+  janpozyczdb.batchUpdate('INSERT INTO CUSTOMER_LOAN(CUSTOMER_ID, LOAN_ID) VALUES(?, ?)', [
+    [10, 10050],
+    [10, 10060],
+    [20, 20100]
+  ]);
+
 }
 
 createDatabase.$inject = ['scEmbeddedDatabase'];
