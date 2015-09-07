@@ -4,6 +4,9 @@ sc-embedded-database
 [![npm version](https://badge.fury.io/js/sc-embedded-database.svg)](http://badge.fury.io/js/sc-embedded-database)
 [![Bower version](https://badge.fury.io/bo/sc-embedded-database.svg)](http://badge.fury.io/bo/sc-embedded-database)
 
+> Beware. This module depends on [Web SQL Database](http://www.w3.org/TR/webdatabase/)
+> specification which is no longer in active maintenance.
+
 ## WTF?
 
 ### Assumptions
@@ -156,10 +159,10 @@ function loanRepositoryFactory(scEmbeddedDatabase) {
   };
 }
 
+loanRepositoryFactory.$inject = ['scEmbeddedDatabase'];
+
 angular.module('scJanPozycz.loan', ['scEmbeddedDatabase'])
   .factory('loanRepository', loanRepositoryFactory);
-
-loanRepositoryFactory.$inject = ['scEmbeddedDatabase'];
 ```
 
 It's important to realize how the aliases in the SELECT clause determine the returned data format.
@@ -177,8 +180,8 @@ SELECT
   C.FIRST_NAME AS borrower_firstName,
   C.LAST_NAME AS borrower_lastName
 FROM LOAN AS L
-   INNER JOIN CUSTOMER_LOAN CL ON L.ID = CL.LOAN_ID
-   INNER JOIN CUSTOMER C ON CL.CUSTOMER_ID = C.ID
+  INNER JOIN CUSTOMER_LOAN CL ON L.ID = CL.LOAN_ID
+  INNER JOIN CUSTOMER C ON CL.CUSTOMER_ID = C.ID
 ```
 
 when passed to the `executeSql()` function will return the following JSON:
@@ -252,7 +255,7 @@ angular.module('scJanPozycz.data', ['scEmbeddedDatabase'])
   .run(createDatabase);
 ```
 
-Then it as a dependency for your app:
+Then add it as a dependency for your app:
 
 ```js
 angular.module('scJanPozycz', [
