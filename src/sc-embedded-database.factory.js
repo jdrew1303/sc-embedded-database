@@ -10,23 +10,32 @@ function embeddedDatabaseFactory($q, $log) {
             databases[name] = openDatabase(name, DEFAULT_DB_VERSION, DEFAULT_DB_DESCRIPTION, DEFAULT_DB_SIZE);
         }
 
-        function executeSql(sql, params) {
+        function executeSql(sql, args) {
             var deferred = $q.defer(),
-                sqlParams = params ? params : [];
+                sqlArgs = args ? args : [];
 
             databases[name].transaction(function (tx) {
-                tx.executeSql(sql, sqlParams, function onSuccess(tx, results) {
+                tx.executeSql(sql, sqlArgs, function onSuccess(tx, results) {
                     deferred.resolve(results);
                 }, function onError(tx, error) {
-                    $log.error('Error executing `' + sql + '` with params `' + JSON.stringify(sqlParams) + '`: ' + error.message);
+                    $log.error('Error executing `' + sql + '` with params `' + JSON.stringify(sqlArgs) + '`: ' + error.message);
                     deferred.reject(error);
                 });
             });
             return deferred.promise;
         }
 
+        function batchUpdate(sql, batchArgs) {
+            var i, promises = [];
+            for (i = 0; i < batchArgs.length; i++) {
+                promises.push(executeSql(sql, batchArgs[i]));
+            }
+            return $q.all(promises);
+        }
+
         return {
-            executeSql: executeSql
+            executeSql: executeSql,
+            batchUpdate: batchUpdate
         };
     }
 
