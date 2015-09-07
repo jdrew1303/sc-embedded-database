@@ -47,9 +47,9 @@ The `LOAN` table holds loan details.
 | 10060      | 1000 EUR | 15 DAYS | OVERDUE   |
 | 20100      |  500 EUR |  7 DAYS | ACTIVE    |
 
-> **Note** The example is intentinally contrived. Stuffing the amount
-> as VARCHAR in your database is probably not the best idea even though
-> I've seen such things in production code.
+> **Note** This example is intentionally contrived. Even though I've seen such
+> things in production code, representing the amount and period as `VARCHAR`s
+> in your database is probably not the best idea.
 
 #### CUSTOMER_LOAN
 
@@ -61,8 +61,10 @@ The `CUSTOMER_LOAN` table holds zero to many loans taken by a customer.
 |               10 |        10060 |
 |               20 |        20100 |
 
+#### Naïve service implementation
+
 Having done the domain modeling you can start messing up with JavaScript and end up with the following AngularJS
-[service](https://docs.angularjs.org/guide/services) for fetching loans:
+[service](https://docs.angularjs.org/guide/services) for fetching some test loans:
 
 ```js
 angular.module('scJanPozycz.loan', ['ng'])
@@ -94,88 +96,170 @@ function loanRepositoryFactory($q) {
 }
 ```
 
-#### DRY
+#### DRY service implementation
 
 ```js
-angular.module('scJanPozycz.loan', ['scEmbeddedDatabase'])
-   .factory('loanRepository', loanRepositoryFactory);
-
-loanRepositoryFactory.$inject = ['scEmbeddedDatabase'];
-
 function loanRepositoryFactory(scEmbeddedDatabase) {
 
-   var janpozyczdb = scEmbeddedDatabase.use('janpozyczdb');
+  var janpozyczdb = scEmbeddedDatabase.use('janpozyczdb');
 
-   function findAll() {
-      return janpozyczdb.executeSql(
-         'SELECT ' +
-         '  L.ID AS id, ' +
-         '  L.AMOUNT AS amount, ' +
-         '  L.PERIOD AS period, ' +
-         '  C.ID AS borrower_id, ' +
-         '  C.FIRST_NAME AS borrower_firstName, ' +
-         '  C.LAST_NAME AS borrower_lastName ' +
-         'FROM LOAN AS L ' +
-         '  INNER JOIN CUSTOMER_LOAN CL ON L.ID = CL.LOAN_ID ' +
-         '  INNER JOIN CUSTOMER C ON CL.CUSTOMER_ID = C.ID'
-      ).then(toArray);
-   }
+  function findAll() {
+    return janpozyczdb.executeSql(
+      'SELECT ' +
+      '  L.ID AS id, ' +
+      '  L.AMOUNT AS amount, ' +
+      '  L.PERIOD AS period, ' +
+      '  C.ID AS borrower_id, ' +
+      '  C.FIRST_NAME AS borrower_firstName, ' +
+      '  C.LAST_NAME AS borrower_lastName ' +
+      'FROM LOAN AS L ' +
+      '  INNER JOIN CUSTOMER_LOAN CL ON L.ID = CL.LOAN_ID ' +
+      '  INNER JOIN CUSTOMER C ON CL.CUSTOMER_ID = C.ID'
+    ).then(toArray);
+  }
 
-   function findOne(id) {
-      return janpozyczdb.executeSql(
-          'SELECT L.ID AS id, ' +
-          '  L.AMOUNT AS amount, ' +
-          '  L.PERIOD AS period, ' +
-          '  C.ID AS borrower_id, ' +
-          '  C.FIRST_NAME AS borrower_firstName, ' + '' +
-          '  C.LAST_NAME AS borrower_lastName ' +
-          'FROM LOAN AS L ' +
-          '  INNER JOIN CUSTOMER_LOAN CL ON L.ID = CL.LOAN_ID ' +
-          '  INNER JOIN CUSTOMER C ON CL.CUSTOMER_ID = C.ID ' +
-          'WHERE L.ID = ?', [id]
-      ).then(toArray).then(firstElement);
-   }
+  function findOne(id) {
+    return janpozyczdb.executeSql(
+      'SELECT L.ID AS id, ' +
+      '  L.AMOUNT AS amount, ' +
+      '  L.PERIOD AS period, ' +
+      '  C.ID AS borrower_id, ' +
+      '  C.FIRST_NAME AS borrower_firstName, ' + '' +
+      '  C.LAST_NAME AS borrower_lastName ' +
+      'FROM LOAN AS L ' +
+      '  INNER JOIN CUSTOMER_LOAN CL ON L.ID = CL.LOAN_ID ' +
+      '  INNER JOIN CUSTOMER C ON CL.CUSTOMER_ID = C.ID ' +
+      'WHERE L.ID = ?', [id]
+    ).then(toArray).then(firstElement);
+  }
 
-   function findByBorrowerId(borrowerId) {
-      return janpozyczdb.executeSql(
-          'SELECT ' +
-          '  L.ID AS id, ' +
-          '  L.AMOUNT AS amount, ' +
-          '  L.PERIOD AS period, ' +
-          '  C.ID AS borrower_id, ' +
-          '  C.FIRST_NAME AS borrower_firstName, ' +
-          '  C.LAST_NAME AS borrower_lastName ' +
-          'FROM LOAN AS L' +
-          '  INNER JOIN CUSTOMER_LOAN CL ON L.ID = CL.LOAN_ID ' +
-          '  INNER JOIN CUSTOMER C ON CL.CUSTOMER_ID = C.ID ' +
-          'WHERE C.ID = ?', [borrowerId]
-      ).then(toArray);
-   }
+  function findByBorrowerId(borrowerId) {
+    return janpozyczdb.executeSql(
+      'SELECT ' +
+      '  L.ID AS id, ' +
+      '  L.AMOUNT AS amount, ' +
+      '  L.PERIOD AS period, ' +
+      '  C.ID AS borrower_id, ' +
+      '  C.FIRST_NAME AS borrower_firstName, ' +
+      '  C.LAST_NAME AS borrower_lastName ' +
+      'FROM LOAN AS L' +
+      '  INNER JOIN CUSTOMER_LOAN CL ON L.ID = CL.LOAN_ID ' +
+      '  INNER JOIN CUSTOMER C ON CL.CUSTOMER_ID = C.ID ' +
+      'WHERE C.ID = ?', [borrowerId]
+    ).then(toArray);
+  }
 
-   return {
-      findAll: findAll,
-      findOne: findOne,
-      findByBorrowerId: findByBorrowerId
-   };
+  return {
+    findAll: findAll,
+    findOne: findOne,
+    findByBorrowerId: findByBorrowerId
+  };
 }
+
+angular.module('scJanPozycz.loan', ['scEmbeddedDatabase'])
+  .factory('loanRepository', loanRepositoryFactory);
+
+loanRepositoryFactory.$inject = ['scEmbeddedDatabase'];
 ```
 
 It's important to realize how the aliases in the SELECT clause determine the returned data format.
 A proper use of the `_` underscore character allows you to return some columns as the properties of
 an embedded object.
 
-For example, the following SELECT clause:
+For example, the following SELECT statement:
 
 ```sql
-SELECT L.ID AS id, L.AMOUNT AS amount, L.PERIOD AS period,
-       C.ID AS borrower_id, C.FIRST_NAME AS borrower_firstName, C.LAST_NAME AS borrower_lastName
+SELECT
+  L.ID AS id,
+  L.AMOUNT AS amount,
+  L.PERIOD AS period,
+  C.ID AS borrower_id,
+  C.FIRST_NAME AS borrower_firstName,
+  C.LAST_NAME AS borrower_lastName
+FROM LOAN AS L
+   INNER JOIN CUSTOMER_LOAN CL ON L.ID = CL.LOAN_ID
+   INNER JOIN CUSTOMER C ON CL.CUSTOMER_ID = C.ID
 ```
 
-when passed to the `scEmbeddedDatabase#executeSql` function will return the following JSON:
+when passed to the `executeSql()` function will return the following JSON:
 
 ```js
 [
-   {id: 10250, amount: 1600, borrower: {id: 1, firstName: 'Albert', lastName: 'Einstein'}},
-   {id: 10240, amount: 1400, borrower: {id: 2, firstName: 'Eliza', lastName: 'Orzeszkowa'}}
+  {
+    id: 10050,
+    amount: '1500 EUR',
+    period: '30 DAYS',
+    borrower: {
+      id: 10,
+      firstName: 'Albert',
+      lastName: 'Einstein'
+    }
+  },
+  {
+    id: 10060,
+    amount: '1000 EUR',
+    period: '15 DAYS',
+    borrower: {
+      id: 10,
+      firstName: 'Albert',
+      lastName: 'Einstein'
+    }
+  },
+  {
+    id: 20100,
+    amount: '500 EUR',
+    period: '7 DAYS',
+    borrower: {
+      id: 20,
+      firstName: 'Eliza',
+      lastName: 'Orzeszkowa'
+    }
+  }
 ]
+```
+
+#### Data module
+
+I'd recommend writing a dedicated module for creating your embedded database
+and populating it with sample data.
+
+```js
+function createDatabase(scEmbeddedDatabase) {
+  var janpozyczdb = scEmbeddedDatabase.use('janpozyczdb');
+
+  janpozyczdb.executeSql('DROP TABLE CUSTOMER');
+  janpozyczdb.executeSql('CREATE TABLE CUSTOMER(ID UNIQUE, FIRST_NAME, LAST_NAME)');
+  janpozyczdb.executeSql('INSERT INTO CUSTOMER(ID, FIRST_NAME, LAST_NAME) VALUES (10, "Albert", "Einstein")');
+  janpozyczdb.executeSql('INSERT INTO CUSTOMER(ID, FIRST_NAME, LAST_NAME) VALUES (20, "Eliza", "Orzeszkowa")');
+  janpozyczdb.executeSql('INSERT INTO CUSTOMER(ID, FIRST_NAME, LAST_NAME) VALUES (30, "Henryk", "Sienkiewicz")');
+
+  janpozyczdb.executeSql('DROP TABLE LOAN');
+  janpozyczdb.executeSql('CREATE TABLE LOAN(ID UNIQUE, AMOUNT, PERIOD, STATUS)');
+  janpozyczdb.executeSql('INSERT INTO LOAN(ID, AMOUNT, PERIOD, STATUS) VALUES (10050, "1500 EUR", "30 DAYS", "REQUESTED")');
+  janpozyczdb.executeSql('INSERT INTO LOAN(ID, AMOUNT, PERIOD, STATUS) VALUES (10060, "1000 EUR", "15 DAYS", "OVERDUE")');
+  janpozyczdb.executeSql('INSERT INTO LOAN(ID, AMOUNT, PERIOD, STATUS) VALUES (20100, "500 EUR", "7 DAYS", "ACTIVE")');
+
+  janpozyczdb.executeSql('DROP TABLE CUSTOMER_LOAN');
+  janpozyczdb.executeSql('CREATE TABLE CUSTOMER_LOAN(CUSTOMER_ID, LOAN_ID)');
+  janpozyczdb.executeSql('INSERT INTO CUSTOMER_LOAN(CUSTOMER_ID, LOAN_ID) VALUES(10, 10050)');
+  janpozyczdb.executeSql('INSERT INTO CUSTOMER_LOAN(CUSTOMER_ID, LOAN_ID) VALUES(10, 10060)');
+  janpozyczdb.executeSql('INSERT INTO CUSTOMER_LOAN(CUSTOMER_ID, LOAN_ID) VALUES(20, 20100)');
+}
+
+createDatabase.$inject = ['scEmbeddedDatabase'];
+
+angular.module('scJanPozycz.data', ['scEmbeddedDatabase'])
+  .run(createDatabase);
+```
+
+Then it as a dependency for your app:
+
+```js
+angular.module('scJanPozycz', [
+  'ngRoute',
+  'scJanPozycz.data',
+  'scJanPozycz.security',
+  'scJanPozycz.customer',
+  'scJanPozycz.loan'
+]);
 ```
