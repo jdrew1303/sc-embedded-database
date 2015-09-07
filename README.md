@@ -4,10 +4,13 @@ sc-embedded-database
 [![npm version](https://badge.fury.io/js/sc-embedded-database.svg)](http://badge.fury.io/js/sc-embedded-database)
 [![Bower version](https://badge.fury.io/bo/sc-embedded-database.svg)](http://badge.fury.io/bo/sc-embedded-database)
 
-> Beware. This module depends on [Web SQL Database](http://www.w3.org/TR/webdatabase/)
-> specification which is no longer in active maintenance.
+> **Beware** This module depends on [Web SQL Database](http://www.w3.org/TR/webdatabase/) specification which is no
+> longer in active maintenance. But this may change soon once I find a good, pure JavaScript implementation of a SQL
+> database.
 
 ## WTF?
+
+This is an AngularJS module to rapidly feed your POC's frontend with data using SQL syntax.
 
 ### Assumptions
 
@@ -20,17 +23,17 @@ I assume that you're:
 5. displaying some meaningful data in you next kick-ass application
 6. lazy and want to transition from POC to a production ready code real quick
 
-### Example
+## Example
 
-Imagine that you're in the customer lending domain trying to do a POC and convince investors
-to support your project. A customer is in a need to borrow some money fast. Therefore you app has
-to track all borrowers, their personal and contact data as well as loan requests. Tracking overdue
-loans and calculating penalty rates is a part of the business too.
+Imagine that you're in the customer lending domain trying to do a POC and convince investors to support your project.
+A customer is in a need to borrow some money fast. Therefore you app has to track all borrowers, their personal and
+contact data as well as loan requests. Tracking overdue loans and calculating penalty rates is a part of the business
+too.
 
 So they teach in kindergarten that you may go with the following
 [relational model](https://en.wikipedia.org/wiki/Relational_model) to store the data.
 
-#### CUSTOMER
+### CUSTOMER
 
 The `CUSTOMER` table holds basic customer details.
 
@@ -40,7 +43,7 @@ The `CUSTOMER` table holds basic customer details.
 |      20 | Eliza      | Orzeszkowa  |
 |      30 | Henryk     | Sienkiewicz |
 
-#### LOAN
+### LOAN
 
 The `LOAN` table holds loan details.
 
@@ -50,11 +53,10 @@ The `LOAN` table holds loan details.
 | 10060      | 1000 EUR | 15 DAYS | OVERDUE   |
 | 20100      |  500 EUR |  7 DAYS | ACTIVE    |
 
-> **Note** This example is intentionally contrived. Even though I've seen such
-> things in production code, representing the amount and period as `VARCHAR`s
-> in your database is probably not the best idea.
+> **Note** This example is intentionally contrived. Even though I've seen such things in production code, representing
+> the amount and period as `VARCHAR`s in your database is probably **not** the best idea.
 
-#### CUSTOMER_LOAN
+### CUSTOMER_LOAN
 
 The `CUSTOMER_LOAN` table holds zero to many loans taken by a customer.
 
@@ -64,42 +66,84 @@ The `CUSTOMER_LOAN` table holds zero to many loans taken by a customer.
 |               10 |        10060 |
 |               20 |        20100 |
 
-#### Naïve service implementation
+### Naïve service implementation
 
 Having done the domain modeling you can start messing up with JavaScript and end up with the following AngularJS
 [service](https://docs.angularjs.org/guide/services) for fetching some test loans:
 
 ```js
-angular.module('scJanPozycz.loan', ['ng'])
-   .factory('loanRepository', loanRepositoryFactory);
+function loanRepositoryFactory($q) {
+
+  var database = [{
+    id: 10050,
+    amount: '1500 EUR',
+    borrower: {
+      id: 10,
+      firstName: 'Albert',
+      lastName: 'Einstein'
+    }
+  }, {
+    id: 10060,
+    amount: '1000 EUR',
+    borrower: {
+      id: 10,
+      firstName: 'Albert',
+      lastName: 'Einstein'
+    }
+  }, {
+    id: 20100,
+    amount: '500 EUR',
+    borrower: {
+      id: 20,
+      firstName: 'Eliza',
+      lastName: 'Orzeszkowa'
+    }
+  }];
+
+  function findAll() {
+    return $q.when(database);
+  }
+
+  function findOne(id) {
+    var i;
+    for (i = 0; i < database.length; i++) {
+      if (database[i].id === id) {
+        return $q.when(database[i]);
+      }
+    }
+    return null;
+  }
+
+  function findByBorrowerId(borrowerId) {
+    var i, result = [];
+    for (i = 0; i < database.length; i++) {
+      if (database[i].borrower.id === borrowerId) {
+        result.push(database[i]);
+      }
+    }
+    return $q.when(result);
+  }
+
+  return {
+    findAll: findAll,
+    findOne: findOne,
+    findByBorrowerId: findByBorrowerId
+  };
+}
 
 loanRepositoryFactory.$inject = ['$q'];
 
-function loanRepositoryFactory($q) {
-   function findAll() {
-      return $q.when([
-         {id: 10250, amount: 1600, borrower: {id: 1, firstName: 'Albert', lastName: 'Einstein'}},
-         {id: 10240, amount: 1400, borrower: {id: 2, firstName: 'Eliza', lastName: 'Orzeszkowa'}}
-      ]);
-   }
-
-   function findOne(id) {
-      return new Error('Not implemented yet!');
-   }
-
-   function findByBorrowerId(borrowerId) {
-      throw new Error('Not implemented yet!');
-   }
-
-   return {
-      findAll: findAll,
-      findOne: findOne,
-      findByBorrowerId: findByBorrowerId
-   };
-}
+angular.module('scJanPozycz.loan', ['ng'])
+  .factory('loanRepository', loanRepositoryFactory);
 ```
 
-#### DRY service implementation
+You can go quite far with such implementation, but it has some serious drawbacks. First off, it's quite some typing
+involved. Then, it becomes more and more complicated to maintain relationships between your domain objects. Data
+consistency is another concern. For example, a similar service `customerRepository` will contain customer data. Now you
+see that this data is duplicated in the `loanRepository` service. Changing customer identifiers in one file and
+forgetting to do so in the other will cause you app to display rubbish.
+
+### DRY service implementation
 
 ```js
 function loanRepositoryFactory(scEmbeddedDatabase) {
@@ -161,13 +205,12 @@ function loanRepositoryFactory(scEmbeddedDatabase) {
 
 loanRepositoryFactory.$inject = ['scEmbeddedDatabase'];
 
-angular.module('scJanPozycz.loan', ['scEmbeddedDatabase'])
+angular.module('scJanPozycz.loan', ['ng', 'scEmbeddedDatabase'])
   .factory('loanRepository', loanRepositoryFactory);
 ```
 
-It's important to realize how the aliases in the SELECT clause determine the returned data format.
-A proper use of the `_` underscore character allows you to return some columns as the properties of
-an embedded object.
+It's important to realize how the aliases in the SELECT clause determine the returned data format. A proper use of the
+`_` underscore character allows you to return some columns as the properties of an embedded object.
 
 For example, the following SELECT statement:
 
@@ -221,10 +264,10 @@ when passed to the `executeSql()` function will return the following JSON:
 ]
 ```
 
-#### Data module
+### Data module
 
-I'd recommend writing a dedicated module for creating your embedded database
-and populating it with sample data.
+I'd recommend writing a dedicated module for creating your embedded database and populating it with sample data in one
+place.
 
 ```js
 function createDatabase(scEmbeddedDatabase) {
@@ -266,3 +309,11 @@ angular.module('scJanPozycz', [
   'scJanPozycz.loan'
 ]);
 ```
+
+## Does it really work?
+
+So far I checked that this module works with Chrome and Safari web browsers.
+
+![Chrome](/README/sc-embedded-database-chrome.png)
+
+![Safari](/README/sc-embedded-database-safari.png)
