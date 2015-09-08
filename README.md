@@ -151,7 +151,7 @@ function loanRepositoryFactory(scEmbeddedDatabase) {
   var janpozyczdb = scEmbeddedDatabase.use('janpozyczdb');
 
   function findAll() {
-    return janpozyczdb.executeSql(
+    return janpozyczdb.queryForArray(
       'SELECT ' +
       '  L.ID AS id, ' +
       '  L.AMOUNT AS amount, ' +
@@ -162,7 +162,7 @@ function loanRepositoryFactory(scEmbeddedDatabase) {
       'FROM LOAN AS L ' +
       '  INNER JOIN CUSTOMER_LOAN CL ON L.ID = CL.LOAN_ID ' +
       '  INNER JOIN CUSTOMER C ON CL.CUSTOMER_ID = C.ID'
-    ).then(toArray);
+    );
   }
 
   function findOne(id) {
@@ -181,7 +181,7 @@ function loanRepositoryFactory(scEmbeddedDatabase) {
   }
 
   function findByBorrowerId(borrowerId) {
-    return janpozyczdb.executeSql(
+    return janpozyczdb.queryForArray(
       'SELECT ' +
       '  L.ID AS id, ' +
       '  L.AMOUNT AS amount, ' +
@@ -193,7 +193,7 @@ function loanRepositoryFactory(scEmbeddedDatabase) {
       '  INNER JOIN CUSTOMER_LOAN CL ON L.ID = CL.LOAN_ID ' +
       '  INNER JOIN CUSTOMER C ON CL.CUSTOMER_ID = C.ID ' +
       'WHERE C.ID = ?', [borrowerId]
-    ).then(toArray);
+    );
   }
 
   return {

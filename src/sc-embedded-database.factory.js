@@ -33,9 +33,22 @@ function embeddedDatabaseFactory($q, $log) {
             return $q.all(promises);
         }
 
+        function queryForArray(sql, args) {
+            return executeSql(sql, args).then(toArray);
+        }
+
+        function toArray(results) {
+            var list = [], i;
+            for (i = 0; i < results.rows.length; i++) {
+                list.push(results.rows.item(i));
+            }
+            return list;
+        }
+
         return {
             executeSql: executeSql,
-            batchUpdate: batchUpdate
+            batchUpdate: batchUpdate,
+            queryForArray: queryForArray
         };
     }
 
