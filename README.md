@@ -166,7 +166,7 @@ function loanRepositoryFactory(scEmbeddedDatabase) {
   }
 
   function findOne(id) {
-    return janpozyczdb.executeSql(
+    return janpozyczdb.queryForObject(
       'SELECT L.ID AS id, ' +
       '  L.AMOUNT AS amount, ' +
       '  L.PERIOD AS period, ' +
@@ -177,7 +177,7 @@ function loanRepositoryFactory(scEmbeddedDatabase) {
       '  INNER JOIN CUSTOMER_LOAN CL ON L.ID = CL.LOAN_ID ' +
       '  INNER JOIN CUSTOMER C ON CL.CUSTOMER_ID = C.ID ' +
       'WHERE L.ID = ?', [id]
-    ).then(toArray).then(firstElement);
+    );
   }
 
   function findByBorrowerId(borrowerId) {

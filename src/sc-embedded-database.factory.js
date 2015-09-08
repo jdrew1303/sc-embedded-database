@@ -37,6 +37,10 @@ function embeddedDatabaseFactory($q, $log) {
             return executeSql(sql, args).then(toArray);
         }
 
+        function queryForObject(sql, args) {
+            return executeSql(sql, args).then(toArray).then(firstElement);
+        }
+
         function toArray(results) {
             var list = [], i;
             for (i = 0; i < results.rows.length; i++) {
@@ -45,10 +49,15 @@ function embeddedDatabaseFactory($q, $log) {
             return list;
         }
 
+        function firstElement(array) {
+            return array[0];
+        }
+
         return {
             executeSql: executeSql,
             batchUpdate: batchUpdate,
-            queryForArray: queryForArray
+            queryForArray: queryForArray,
+            queryForObject: queryForObject
         };
     }
 
