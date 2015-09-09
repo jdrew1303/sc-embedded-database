@@ -1,4 +1,4 @@
-function embeddedDatabaseFactory($q, $log) {
+function embeddedDatabaseFactory($q, $log, $$rowMappers) {
 
     var DEFAULT_DB_VERSION = '1.0';
     var DEFAULT_DB_SIZE = 2 * 1024 * 1024;
@@ -44,7 +44,9 @@ function embeddedDatabaseFactory($q, $log) {
         function toArray(results) {
             var list = [], i;
             for (i = 0; i < results.rows.length; i++) {
-                list.push(results.rows.item(i));
+                list.push(
+                    $$rowMappers.underscoreCasePropertiesToObjectTreeMapper(results.rows.item(i))
+                );
             }
             return list;
         }
@@ -67,7 +69,40 @@ function embeddedDatabaseFactory($q, $log) {
 
 }
 
-embeddedDatabaseFactory.$inject = ['$q', '$log'];
+function $$rowMappersFactory() {
+    function identityMapper(row) {
+        return row;
+    }
+
+    function underscoreCasePropertiesToObjectTreeMapper(source) {
+        var obj = {};
+
+        Object.keys(source).forEach(function (prop) {
+            popInsert(obj, prop.split('_'), source[prop]);
+        });
+
+        return obj;
+
+        function popInsert(obj, path, value) {
+            var first = path[0];
+            if (path.length === 1) {
+                obj[first] = value;
+            } else {
+                var first = path[0];
+                obj[first] = obj[first] || {};
+                popInsert(obj[first], path.slice(1, path.length), value);
+            }
+        }
+    }
+
+    return {
+        identityMapper: identityMapper,
+        underscoreCasePropertiesToObjectTreeMapper: underscoreCasePropertiesToObjectTreeMapper
+    }
+}
+
+embeddedDatabaseFactory.$inject = ['$q', '$log', '$$rowMappers'];
 
 angular.module('scEmbeddedDatabase')
-    .factory('scEmbeddedDatabase', embeddedDatabaseFactory);
+    .factory('scEmbeddedDatabase', embeddedDatabaseFactory)
+    .factory('$$rowMappers', $$rowMappersFactory);
